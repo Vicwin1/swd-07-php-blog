@@ -118,6 +118,7 @@ function public_header(string $title): void
             <?php foreach ($categories as $category): ?>
                 <a href="/swd/07-php-blog/category/<?= rawurlencode($category['slug']) ?>"><?= e($category['name']) ?></a>
             <?php endforeach; ?>
+            <a class="admin-sign-in-link" href="/swd/07-php-blog/admin/login.php">Admin sign in</a>
         </nav>
         <form class="site-search" action="/swd/07-php-blog/search" method="get">
             <label class="sr-only" for="site-query">Search posts</label>

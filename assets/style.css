@@ -16,6 +16,7 @@ button, .button { border: 0; border-radius: .45rem; background: var(--brand); co
 .site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .85rem; }
 .site-nav a { color: var(--muted); font-size: .92rem; font-weight: 600; text-decoration: none; }
 .site-nav a:hover { color: var(--brand); }
+.site-nav .admin-sign-in-link { color: var(--brand); }
 .site-search { display: flex; gap: .5rem; }
 .site-search input, .form-control { min-width: 0; padding: .65rem; border: 1px solid #cbd5e1; border-radius: .4rem; background: #fff; }
 .site-main { max-width: 1120px; min-height: 75vh; margin: 3rem auto 4rem; padding: 0 1.5rem; }
