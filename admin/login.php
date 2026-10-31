@@ -25,9 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Admin sign in | SWD Blog</title>
     <link rel="stylesheet" href="/swd/07-php-blog/assets/style.css">
 </head>
-<body>
-<main class="site-main">
-    <form class="form-card" method="post" action="">
+<body class="login-page">
+<main class="site-main login-main">
+    <form class="form-card login-card" method="post" action="">
         <h1>Admin sign in</h1>
         <?php if ($adminCount === 0): ?>
             <div class="alert">No administrator account exists yet. Create the first admin from a terminal in the project folder:<br><code>C:\xampp\php\php.exe create-admin.php "Your Name" you@example.com</code></div>
