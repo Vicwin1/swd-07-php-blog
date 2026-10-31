@@ -2,57 +2,60 @@
 declare(strict_types=1);
 require_once __DIR__ . '/app/bootstrap.php';
 
-$page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 6;
-$count = (int) db()->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND published_at IS NOT NULL AND published_at <= NOW()")->fetchColumn();
-$totalPages = max(1, (int) ceil($count / $perPage));
-$page = min($page, $totalPages);
-$statement = db()->prepare(
-    "SELECT p.title, p.slug, p.body, p.excerpt, p.cover_image, p.published_at,
+$total = (int) db()->query(
+    "SELECT COUNT(*) FROM posts WHERE status = 'published' AND published_at <= NOW()"
+)->fetchColumn();
+$pages = max(1, (int) ceil($total / $perPage));
+$page = min($pages, max(1, (int) ($_GET['page'] ?? 1)));
+$query = db()->prepare(
+    "SELECT p.title, p.slug, p.excerpt, p.body, p.cover_image, p.published_at,
             c.name AS category_name, c.slug AS category_slug, a.name AS author_name
      FROM posts p
      JOIN categories c ON c.id = p.category_id
      JOIN admins a ON a.id = p.author_id
-     WHERE p.status = 'published' AND p.published_at IS NOT NULL AND p.published_at <= NOW()
-     ORDER BY p.published_at DESC, p.id DESC LIMIT :limit OFFSET :offset"
+     WHERE p.status = 'published' AND p.published_at <= NOW()
+     ORDER BY p.published_at DESC, p.id DESC
+     LIMIT :limit OFFSET :offset"
 );
-$statement->bindValue('limit', $perPage, PDO::PARAM_INT);
-$statement->bindValue('offset', ($page - 1) * $perPage, PDO::PARAM_INT);
-$statement->execute();
-$posts = $statement->fetchAll();
+$query->bindValue('limit', $perPage, PDO::PARAM_INT);
+$query->bindValue('offset', ($page - 1) * $perPage, PDO::PARAM_INT);
+$query->execute();
+$posts = $query->fetchAll();
 
 public_header('Latest posts');
 ?>
-<header class="page-heading">
-    <p class="eyebrow">Stories, ideas, and updates</p>
+<section class="page-heading">
+    <p class="eyebrow">Stories and updates</p>
     <h1>Latest posts</h1>
-</header>
+    <p>News, ideas, and updates from our community.</p>
+</section>
 <?php if (!$posts): ?>
-    <div class="panel empty-state">
-        <h2>Your blog homepage is ready</h2>
-        <p>There are no published posts yet. Sign in to the admin area to add categories and publish your first post.</p>
-        <p><a class="button" href="/swd/07-php-blog/admin/login.php">Open admin login</a></p>
-        <p class="muted">If this is a fresh install, first create an administrator from a terminal with <code>php create-admin.php "Your Name" you@example.com</code>, then optionally run <code>php seed.php</code> to add sample posts.</p>
-    </div>
+    <p class="empty-state">There are no published posts yet.</p>
 <?php else: ?>
     <div class="post-grid">
         <?php foreach ($posts as $post): ?>
             <article class="post-card">
-                <?php if ($post['cover_image']): ?><a class="post-card-image" href="/swd/07-php-blog/post/<?= rawurlencode($post['slug']) ?>"><img class="post-cover" src="/swd/07-php-blog/uploads/<?= e($post['cover_image']) ?>" alt=""></a><?php endif; ?>
+                <?php if ($post['cover_image']): ?>
+                    <a href="<?= e(url('post.php?slug=' . rawurlencode($post['slug']))) ?>">
+                        <img class="post-cover" src="<?= e(url($post['cover_image'])) ?>" alt="">
+                    </a>
+                <?php endif; ?>
                 <div class="post-card-content">
-                    <p class="meta"><a href="/swd/07-php-blog/category/<?= rawurlencode($post['category_slug']) ?>"><?= e($post['category_name']) ?></a></p>
-                    <h2><a href="/swd/07-php-blog/post/<?= rawurlencode($post['slug']) ?>"><?= e($post['title']) ?></a></h2>
-                    <p class="post-excerpt"><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
-                    <p class="post-byline">By <?= e($post['author_name']) ?> <span aria-hidden="true">·</span> <?= e(format_date($post['published_at'])) ?></p>
+                    <a class="eyebrow" href="<?= e(url('category.php?slug=' . rawurlencode($post['category_slug']))) ?>"><?= e($post['category_name']) ?></a>
+                    <h2><a href="<?= e(url('post.php?slug=' . rawurlencode($post['slug']))) ?>"><?= e($post['title']) ?></a></h2>
+                    <p><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
+                    <p class="post-meta">By <?= e($post['author_name']) ?> · <?= e(format_date($post['published_at'])) ?></p>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
-    <?php if ($count > $perPage): ?>
+    <?php if ($pages > 1): ?>
         <nav class="pagination" aria-label="Pagination">
-            <?php if ($page > 1): ?><a class="button button-secondary" href="?page=<?= $page - 1 ?>">Newer posts</a><?php endif; ?>
-            <span>Page <?= $page ?> of <?= (int) ceil($count / $perPage) ?></span>
-            <?php if ($page < $totalPages): ?><a class="button button-secondary" href="?page=<?= $page + 1 ?>">Older posts</a><?php endif; ?>
+            <?php if ($page > 1): ?><a href="<?= e(url('?page=' . ($page - 1))) ?>">Previous</a><?php endif; ?>
+            <span>Page <?= $page ?> of <?= $pages ?></span>
+            <?php if ($page < $pages): ?><a href="<?= e(url('?page=' . ($page + 1))) ?>">Next</a><?php endif; ?>
         </nav>
     <?php endif; ?>
-<?php endif; public_footer(); ?>
+<?php endif; ?>
+<?php public_footer(); ?>

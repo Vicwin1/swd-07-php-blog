@@ -5,40 +5,43 @@ require_once dirname(__DIR__) . '/layout.php';
 require_admin();
 
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-$statement = db()->prepare('SELECT * FROM categories WHERE id = :id');
-$statement->execute(['id' => $id]);
-$category = $statement->fetch();
+$query = db()->prepare('SELECT * FROM categories WHERE id = :id LIMIT 1');
+$query->execute(['id' => $id ?: 0]);
+$category = $query->fetch();
 if (!$category) {
     http_response_code(404);
     exit('Category not found.');
 }
 $errors = [];
-$values = ['name' => $category['name'], 'slug' => $category['slug'], 'description' => $category['description'] ?? ''];
+$name = $category['name'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    foreach (array_keys($values) as $key) $values[$key] = post_value($key);
-    $values['slug'] = slugify($values['slug'] !== '' ? $values['slug'] : $values['name']);
-    if ($values['name'] === '' || mb_strlen($values['name']) > 120) $errors[] = 'Name is required and must be 120 characters or fewer.';
-    if (mb_strlen($values['slug']) > 160) $errors[] = 'Slug must be 160 characters or fewer.';
+    $name = post_value('name');
+    if ($name === '' || mb_strlen($name) > 120) $errors[] = 'Name is required and must be 120 characters or fewer.';
     if (!$errors) {
+        $update = db()->prepare('UPDATE categories SET name = :name, slug = :slug WHERE id = :id');
         try {
-            $update = db()->prepare('UPDATE categories SET name = :name, slug = :slug, description = :description WHERE id = :id');
-            $update->execute(['name' => $values['name'], 'slug' => $values['slug'], 'description' => $values['description'] ?: null, 'id' => $id]);
+            $update->execute([
+                'name' => $name,
+                'slug' => unique_slug('categories', $name, (int) $category['id']),
+                'id' => (int) $category['id'],
+            ]);
             flash('success', 'Category updated.');
-            redirect('/swd/07-php-blog/admin/categories/');
+            redirect(url('admin/categories/'));
         } catch (PDOException $exception) {
-            if ($exception->getCode() === '23000') $errors[] = 'That slug is already in use.';
-            else throw $exception;
+            if ($exception->getCode() !== '23000') throw $exception;
+            $errors[] = 'A category with this name or slug already exists.';
         }
     }
 }
 admin_header('Edit category');
 ?>
-<form class="form-card" method="post">
-    <?= csrf_field() ?><?php foreach ($errors as $error): ?><div class="alert error"><?= e($error) ?></div><?php endforeach; ?>
-    <label class="field">Name<input class="form-control" name="name" maxlength="120" required value="<?= e($values['name']) ?>"></label>
-    <label class="field">Slug<input class="form-control" name="slug" maxlength="160" required value="<?= e($values['slug']) ?>"></label>
-    <label class="field">Description<textarea class="form-control" name="description"><?= e($values['description']) ?></textarea></label>
-    <button type="submit">Update category</button> <a href="/swd/07-php-blog/admin/categories/">Cancel</a>
-</form>
+<section class="panel form-panel">
+    <?php foreach ($errors as $error): ?><div class="alert error"><?= e($error) ?></div><?php endforeach; ?>
+    <form method="post">
+        <?= csrf_field() ?>
+        <label class="field">Name<input class="form-control" name="name" maxlength="120" required value="<?= e($name) ?>"></label>
+        <div class="form-actions"><button type="submit">Save changes</button><a class="button-link secondary" href="<?= e(url('admin/categories/')) ?>">Cancel</a></div>
+    </form>
+</section>
 <?php admin_footer(); ?>

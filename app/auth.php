@@ -10,30 +10,35 @@ function require_admin(): void
 {
     if (current_admin() === null) {
         flash('error', 'Please sign in to access the admin area.');
-        redirect('/swd/07-php-blog/admin/login.php');
+        redirect(url('admin/login.php'));
     }
 }
 
 function attempt_admin_login(string $email, string $password): bool
 {
-    $statement = db()->prepare('SELECT id, name, email, password_hash FROM admins WHERE email = :email LIMIT 1');
-    $statement->execute(['email' => strtolower($email)]);
-    $admin = $statement->fetch();
-
-    if (!$admin || !password_verify($password, $admin['password_hash'])) {
+    $query = db()->prepare('SELECT id, name, email, password_hash FROM admins WHERE email = :email LIMIT 1');
+    $query->execute(['email' => strtolower(trim($email))]);
+    $admin = $query->fetch();
+    $validPassword = password_verify(
+        $password,
+        $admin['password_hash'] ?? '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.'
+    );
+    if (!$admin || !$validPassword) {
         return false;
     }
-
-    session_regenerate_id(true);
-    $_SESSION['created_at'] = time();
-    $_SESSION['last_regenerated_at'] = time();
-    $_SESSION['last_activity'] = time();
+    if (!session_regenerate_id(true)) {
+        throw new RuntimeException('Unable to renew the session after authentication.');
+    }
+    $now = time();
+    $_SESSION['created_at'] = $now;
+    $_SESSION['last_regenerated_at'] = $now;
+    $_SESSION['last_activity'] = $now;
     $_SESSION['admin'] = [
         'id' => (int) $admin['id'],
         'name' => $admin['name'],
         'email' => $admin['email'],
     ];
-
+    $_SESSION['_csrf'] = bin2hex(random_bytes(32));
     if (password_needs_rehash($admin['password_hash'], PASSWORD_DEFAULT)) {
         $update = db()->prepare('UPDATE admins SET password_hash = :hash WHERE id = :id');
         $update->execute([
@@ -41,7 +46,6 @@ function attempt_admin_login(string $email, string $password): bool
             'id' => $admin['id'],
         ]);
     }
-
     return true;
 }
 

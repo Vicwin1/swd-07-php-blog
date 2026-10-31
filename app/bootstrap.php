@@ -6,7 +6,6 @@ if (PHP_VERSION_ID < 80000) {
 }
 
 date_default_timezone_set(getenv('APP_TIMEZONE') ?: 'UTC');
-
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/csrf.php';
@@ -19,7 +18,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_name('swd_blog_session');
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => '/',
+        'path' => APP_BASE_URL . '/',
         'domain' => '',
         'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
         'httponly' => true,
@@ -28,21 +27,27 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 
     $now = time();
-    $expired = isset($_SESSION['last_activity'], $_SESSION['created_at'])
-        && ($now - (int) $_SESSION['last_activity'] > 1800
-            || $now - (int) $_SESSION['created_at'] > 28800);
-
+    $createdAt = (int) ($_SESSION['created_at'] ?? 0);
+    $lastActivity = (int) ($_SESSION['last_activity'] ?? 0);
+    $expired = ($lastActivity > 0 && $now - $lastActivity > 1800)
+        || ($createdAt > 0 && $now - $createdAt > 28800);
     if ($expired) {
         $_SESSION = [];
-        session_regenerate_id(true);
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('Unable to renew the expired session.');
+        }
         $_SESSION['created_at'] = $now;
         $_SESSION['last_regenerated_at'] = $now;
-    } elseif (!isset($_SESSION['created_at'])) {
-        session_regenerate_id(true);
+    } elseif ($createdAt === 0) {
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('Unable to initialize a secure session.');
+        }
         $_SESSION['created_at'] = $now;
         $_SESSION['last_regenerated_at'] = $now;
     } elseif ($now - (int) ($_SESSION['last_regenerated_at'] ?? 0) > 900) {
-        session_regenerate_id(true);
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('Unable to rotate the session ID.');
+        }
         $_SESSION['last_regenerated_at'] = $now;
     }
     $_SESSION['last_activity'] = $now;
