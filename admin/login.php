@@ -22,12 +22,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin sign in | SWD Blog</title>
+    <title>Admin sign in | Vicwin FC Blog</title>
     <link rel="stylesheet" href="/swd/07-php-blog/assets/style.css">
 </head>
 <body class="login-page">
 <main class="site-main login-main">
     <form class="form-card login-card" method="post" action="">
+        <a class="login-brand" href="/swd/07-php-blog/">Vicwin FC Blog</a>
         <h1>Admin sign in</h1>
         <?php if ($adminCount === 0): ?>
             <div class="alert">No administrator account exists yet. Create the first admin from a terminal in the project folder:<br><code>C:\xampp\php\php.exe create-admin.php "Your Name" you@example.com</code></div>
