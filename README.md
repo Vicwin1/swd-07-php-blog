@@ -32,3 +32,5 @@ ALTER TABLE posts ADD COLUMN excerpt TEXT NULL AFTER slug;
 ## Environment notes
 
 The application targets the URL above. Ensure Apache has `AllowOverride All` enabled so the access rules in `app/.htaccess` and `uploads/.htaccess` are applied. Enable PHP's PDO MySQL, Fileinfo, iconv, and mbstring extensions.
+
+The root `.htaccess` enables the public `/post/{slug}`, `/category/{slug}`, and `/search` routes. Apache's `mod_rewrite` must be enabled and `AllowOverride All` configured for this directory.

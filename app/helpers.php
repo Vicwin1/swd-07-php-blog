@@ -73,6 +73,24 @@ function excerpt(string $text, int $length = 180): string
     return mb_substr($text, 0, $length - 1) . '…';
 }
 
+function render_body_paragraphs(string $body): string
+{
+    $normalized = str_replace(["\r\n", "\r"], "\n", trim($body));
+    if ($normalized === '') {
+        return '';
+    }
+
+    $paragraphs = preg_split('/\n[ \t]*\n+/', $normalized) ?: [];
+    $html = [];
+    foreach ($paragraphs as $paragraph) {
+        $paragraph = trim($paragraph);
+        if ($paragraph !== '') {
+            $html[] = '<p>' . nl2br(e($paragraph), false) . '</p>';
+        }
+    }
+    return implode("\n", $html);
+}
+
 function format_date(?string $date): string
 {
     if (!$date) {
@@ -95,7 +113,7 @@ function public_header(string $title): void
     <body>
     <header class="site-header">
         <a class="brand" href="/swd/07-php-blog/">SWD Blog</a>
-        <form class="site-search" action="/swd/07-php-blog/search.php" method="get">
+        <form class="site-search" action="/swd/07-php-blog/search" method="get">
             <label class="sr-only" for="site-query">Search posts</label>
             <input id="site-query" name="q" type="search" placeholder="Search posts">
             <button type="submit">Search</button>

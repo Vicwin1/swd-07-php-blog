@@ -45,7 +45,7 @@ admin_header('Posts');
             <td><?= e(format_date($post['updated_at'])) ?></td>
             <td class="actions">
                 <a href="edit.php?id=<?= (int) $post['id'] ?>">Edit</a>
-                <?php if ($post['status'] === 'published'): ?><a href="/swd/07-php-blog/post.php?slug=<?= e($post['slug']) ?>">View</a><?php endif; ?>
+                <?php if ($post['status'] === 'published'): ?><a href="/swd/07-php-blog/post/<?= rawurlencode($post['slug']) ?>">View</a><?php endif; ?>
                 <form method="post" action="delete.php" onsubmit="return confirm('Delete this post?')"><?= csrf_field() ?><input type="hidden" name="id" value="<?= (int) $post['id'] ?>"><button class="danger" type="submit">Delete</button></form>
             </td>
         </tr>
