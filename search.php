@@ -6,7 +6,7 @@ $query = trim((string) ($_GET['q'] ?? ''));
 $posts = [];
 if (mb_strlen($query) >= 3 && mb_strlen($query) <= 100) {
     $statement = db()->prepare(
-        "SELECT p.title, p.slug, p.body, p.cover_image, p.published_at, c.name AS category_name
+        "SELECT p.title, p.slug, p.body, p.excerpt, p.cover_image, p.published_at, c.name AS category_name
          FROM posts p JOIN categories c ON c.id = p.category_id
          WHERE p.status = 'published' AND p.published_at <= NOW()
            AND MATCH(p.title, p.body) AGAINST (:query IN NATURAL LANGUAGE MODE)
@@ -30,7 +30,7 @@ public_header('Search');
             <article class="post-card">
                 <p class="meta"><?= e($post['category_name']) ?> · <?= e(format_date($post['published_at'])) ?></p>
                 <h2><a href="/swd/07-php-blog/post.php?slug=<?= e($post['slug']) ?>"><?= e($post['title']) ?></a></h2>
-                <p><?= e(excerpt($post['body'])) ?></p>
+                <p><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
             </article>
         <?php endforeach; ?>
     </div>

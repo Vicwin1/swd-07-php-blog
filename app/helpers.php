@@ -30,12 +30,38 @@ function flash(string $key, ?string $message = null): ?string
     return is_string($value) ? $value : null;
 }
 
-function slugify(string $text): string
+function slugify(string $title): string
 {
-    $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text) ?: $text;
-    $text = strtolower($text);
-    $text = preg_replace('/[^a-z0-9]+/', '-', $text) ?? '';
-    return trim($text, '-') ?: 'untitled';
+    $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $title);
+    $slug = strtolower($transliterated === false ? $title : $transliterated);
+    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
+    return trim($slug, '-') ?: 'untitled';
+}
+
+function unique_post_slug(string $title, ?int $excludeId = null): string
+{
+    $base = substr(slugify($title), 0, 240);
+    $base = rtrim($base, '-') ?: 'untitled';
+    $candidate = $base;
+    $suffix = 2;
+
+    while (true) {
+        $sql = 'SELECT id FROM posts WHERE slug = :slug';
+        $params = ['slug' => $candidate];
+        if ($excludeId !== null) {
+            $sql .= ' AND id <> :exclude_id';
+            $params['exclude_id'] = $excludeId;
+        }
+
+        $statement = db()->prepare($sql . ' LIMIT 1');
+        $statement->execute($params);
+        if (!$statement->fetch()) {
+            return $candidate;
+        }
+
+        $ending = '-' . $suffix++;
+        $candidate = substr($base, 0, 260 - strlen($ending)) . $ending;
+    }
 }
 
 function excerpt(string $text, int $length = 180): string

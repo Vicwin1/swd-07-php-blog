@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS posts (
   author_id BIGINT UNSIGNED NOT NULL,
   title VARCHAR(240) NOT NULL,
   slug VARCHAR(260) NOT NULL,
+  excerpt TEXT NULL,
   body MEDIUMTEXT NOT NULL,
   status ENUM('draft', 'published') NOT NULL DEFAULT 'draft',
   cover_image VARCHAR(255) NULL,

@@ -21,7 +21,13 @@ A PHP 8 and MySQL blog CMS for `http://localhost/swd/07-php-blog/`.
    The command securely prompts for a password on supported terminals. It must be at least 12 characters. You can also provide it using the `ADMIN_PASSWORD` environment variable.
 5. Sign in at `http://localhost/swd/07-php-blog/admin/login.php` and create at least one category before writing posts.
 
-The `app/` directory denies web access, logout and other state-changing admin actions require POST and CSRF tokens, sessions use strict cookie settings and expire after inactivity, and uploaded files are restricted to validated raster image formats.
+The `app/` directory denies web access, logout and other state-changing admin actions require POST and CSRF tokens, and sessions use strict cookie settings and expire after inactivity. Cover uploads are limited to 2 MB, checked as JPEG/PNG/WebP by `finfo` and image decoding, stored under random names, and never rely on the client-supplied filename or MIME type.
+
+If upgrading a database created before excerpts were added, run this once:
+
+```sql
+ALTER TABLE posts ADD COLUMN excerpt TEXT NULL AFTER slug;
+```
 
 ## Environment notes
 

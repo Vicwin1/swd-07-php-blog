@@ -50,25 +50,30 @@ function store_cover_image(?array $file, ?string $existing = null): ?string
     if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
         return $existing;
     }
-    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'] ?? '')) {
+    $temporaryPath = $file['tmp_name'] ?? null;
+    if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK
+        || !is_string($temporaryPath)
+        || $temporaryPath === ''
+        || !is_uploaded_file($temporaryPath)) {
         throw new RuntimeException('The cover image could not be uploaded.');
     }
-    if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
-        throw new RuntimeException('Cover images must be 5 MB or smaller.');
+    $fileSize = filesize($temporaryPath);
+    if ($fileSize === false || $fileSize > 2 * 1024 * 1024) {
+        throw new RuntimeException('Cover images must be 2 MB or smaller.');
     }
 
-    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
+    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
     if (!isset($extensions[$mime])) {
-        throw new RuntimeException('Use a JPG, PNG, GIF, or WebP image.');
+        throw new RuntimeException('Use a JPEG, PNG, or WebP image.');
     }
-    if (getimagesize($file['tmp_name']) === false) {
+    if (getimagesize($temporaryPath) === false) {
         throw new RuntimeException('The uploaded file is not a valid image.');
     }
 
     $filename = bin2hex(random_bytes(16)) . '.' . $extensions[$mime];
     $destination = dirname(__DIR__) . '/uploads/' . $filename;
-    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+    if (!move_uploaded_file($temporaryPath, $destination)) {
         throw new RuntimeException('The cover image could not be saved.');
     }
     return $filename;

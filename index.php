@@ -6,7 +6,7 @@ $page = max(1, (int) ($_GET['page'] ?? 1));
 $perPage = 9;
 $count = (int) db()->query("SELECT COUNT(*) FROM posts WHERE status = 'published' AND published_at <= NOW()")->fetchColumn();
 $statement = db()->prepare(
-    "SELECT p.title, p.slug, p.body, p.cover_image, p.published_at, c.name AS category_name, c.slug AS category_slug
+    "SELECT p.title, p.slug, p.body, p.excerpt, p.cover_image, p.published_at, c.name AS category_name, c.slug AS category_slug
      FROM posts p JOIN categories c ON c.id = p.category_id
      WHERE p.status = 'published' AND p.published_at <= NOW()
      ORDER BY p.published_at DESC, p.id DESC LIMIT :limit OFFSET :offset"
@@ -31,7 +31,7 @@ public_header('Latest posts');
                 <?php if ($post['cover_image']): ?><a href="/swd/07-php-blog/post.php?slug=<?= e($post['slug']) ?>"><img class="post-cover" src="/swd/07-php-blog/uploads/<?= e($post['cover_image']) ?>" alt=""></a><?php endif; ?>
                 <p class="meta"><a href="/swd/07-php-blog/category.php?slug=<?= e($post['category_slug']) ?>"><?= e($post['category_name']) ?></a> · <?= e(format_date($post['published_at'])) ?></p>
                 <h2><a href="/swd/07-php-blog/post.php?slug=<?= e($post['slug']) ?>"><?= e($post['title']) ?></a></h2>
-                <p><?= e(excerpt($post['body'])) ?></p>
+                <p><?= e($post['excerpt'] ?: excerpt($post['body'])) ?></p>
                 <a href="/swd/07-php-blog/post.php?slug=<?= e($post['slug']) ?>">Read more</a>
             </article>
         <?php endforeach; ?>
