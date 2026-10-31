@@ -1,0 +1,63 @@
+<?php
+declare(strict_types=1);
+
+function current_admin(): ?array
+{
+    return isset($_SESSION['admin']) && is_array($_SESSION['admin']) ? $_SESSION['admin'] : null;
+}
+
+function require_admin(): void
+{
+    if (current_admin() === null) {
+        flash('error', 'Please sign in to access the admin area.');
+        redirect('/swd/07-php-blog/admin/login.php');
+    }
+}
+
+function attempt_admin_login(string $email, string $password): bool
+{
+    $statement = db()->prepare('SELECT id, name, email, password_hash FROM admins WHERE email = :email LIMIT 1');
+    $statement->execute(['email' => strtolower($email)]);
+    $admin = $statement->fetch();
+
+    if (!$admin || !password_verify($password, $admin['password_hash'])) {
+        return false;
+    }
+
+    session_regenerate_id(true);
+    $_SESSION['created_at'] = time();
+    $_SESSION['last_regenerated_at'] = time();
+    $_SESSION['last_activity'] = time();
+    $_SESSION['admin'] = [
+        'id' => (int) $admin['id'],
+        'name' => $admin['name'],
+        'email' => $admin['email'],
+    ];
+
+    if (password_needs_rehash($admin['password_hash'], PASSWORD_DEFAULT)) {
+        $update = db()->prepare('UPDATE admins SET password_hash = :hash WHERE id = :id');
+        $update->execute([
+            'hash' => password_hash($password, PASSWORD_DEFAULT),
+            'id' => $admin['id'],
+        ]);
+    }
+
+    return true;
+}
+
+function logout_admin(): void
+{
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', [
+            'expires' => time() - 42000,
+            'path' => $params['path'],
+            'domain' => $params['domain'],
+            'secure' => $params['secure'],
+            'httponly' => $params['httponly'],
+            'samesite' => $params['samesite'] ?? 'Lax',
+        ]);
+    }
+    session_destroy();
+}
