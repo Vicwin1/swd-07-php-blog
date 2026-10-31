@@ -5,7 +5,6 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 if (current_admin() !== null) {
     redirect(url('admin/'));
 }
-$adminCount = (int) db()->query('SELECT COUNT(*) FROM admins')->fetchColumn();
 $error = flash('error');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
@@ -30,9 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form class="form-card login-card" method="post">
         <a class="login-brand" href="<?= e(url()) ?>">SWD Blog</a>
         <h1>Admin sign in</h1>
-        <?php if ($adminCount === 0): ?>
-            <div class="alert">No administrator account exists yet. Create the first admin from the project folder:<br><code>C:\xampp\php\php.exe create-admin.php "Your Name" you@example.com</code></div>
-        <?php endif; ?>
         <?php if ($error): ?><div class="alert error"><?= e($error) ?></div><?php endif; ?>
         <?= csrf_field() ?>
         <label class="field">Email<input class="form-control" type="email" name="email" required maxlength="190" autocomplete="username" value="<?= e(post_value('email')) ?>"></label>
