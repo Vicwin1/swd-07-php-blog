@@ -13,6 +13,9 @@ button, input, textarea, select { font: inherit; }
 button, .button { border: 0; border-radius: .45rem; background: var(--brand); color: #fff; padding: .65rem 1rem; text-decoration: none; cursor: pointer; }
 .site-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem max(1.25rem, calc((100% - 1120px)/2)); background: #fff; border-bottom: 1px solid var(--line); }
 .brand { color: var(--ink); font-size: 1.3rem; font-weight: 750; text-decoration: none; }
+.site-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .85rem; }
+.site-nav a { color: var(--muted); font-size: .92rem; font-weight: 600; text-decoration: none; }
+.site-nav a:hover { color: var(--brand); }
 .site-search { display: flex; gap: .5rem; }
 .site-search input, .form-control { min-width: 0; padding: .65rem; border: 1px solid #cbd5e1; border-radius: .4rem; background: #fff; }
 .site-main { max-width: 1120px; min-height: 75vh; margin: 3rem auto 4rem; padding: 0 1.5rem; }
@@ -99,6 +102,7 @@ th { background: #f8fafc; }
 .inline-form { display: inline; }
 @media (max-width: 700px) {
     .site-header { align-items: stretch; flex-direction: column; }
+    .site-nav { gap: .5rem 1rem; }
     .site-main { margin-top: 2rem; padding: 0 1rem; }
     .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
     .post-card-image .post-cover { height: 155px; }

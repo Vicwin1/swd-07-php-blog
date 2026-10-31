@@ -28,7 +28,12 @@ public_header('Latest posts');
     <h1>Latest posts</h1>
 </header>
 <?php if (!$posts): ?>
-    <div class="panel empty-state"><h2>No published posts yet</h2><p>Check back soon for new stories.</p></div>
+    <div class="panel empty-state">
+        <h2>Your blog homepage is ready</h2>
+        <p>There are no published posts yet. Sign in to the admin area to add categories and publish your first post.</p>
+        <p><a class="button" href="/swd/07-php-blog/admin/login.php">Open admin login</a></p>
+        <p class="muted">If this is a fresh install, first create an administrator from a terminal with <code>php create-admin.php "Your Name" you@example.com</code>, then optionally run <code>php seed.php</code> to add sample posts.</p>
+    </div>
 <?php else: ?>
     <div class="post-grid">
         <?php foreach ($posts as $post): ?>

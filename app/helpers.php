@@ -101,6 +101,7 @@ function format_date(?string $date): string
 
 function public_header(string $title): void
 {
+    $categories = db()->query('SELECT name, slug FROM categories ORDER BY name')->fetchAll();
     ?>
     <!doctype html>
     <html lang="en">
@@ -113,6 +114,11 @@ function public_header(string $title): void
     <body>
     <header class="site-header">
         <a class="brand" href="/swd/07-php-blog/">SWD Blog</a>
+        <nav class="site-nav" aria-label="Categories">
+            <?php foreach ($categories as $category): ?>
+                <a href="/swd/07-php-blog/category/<?= rawurlencode($category['slug']) ?>"><?= e($category['name']) ?></a>
+            <?php endforeach; ?>
+        </nav>
         <form class="site-search" action="/swd/07-php-blog/search" method="get">
             <label class="sr-only" for="site-query">Search posts</label>
             <input id="site-query" name="q" type="search" placeholder="Search posts">
